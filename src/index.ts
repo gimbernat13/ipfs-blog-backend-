@@ -2,7 +2,17 @@ import { Post } from "./entity/Post"
 import { Category } from "./entity/Category"
 import { AppDataSource } from "./data-source"
 import * as express from "express";
+import * as jwt from "jsonwebtoken";
+import * as bcrypt from "bcryptjs";
+import * as dotenv from "dotenv";
 import { Request, Response } from "express"
+
+
+
+dotenv.config();
+
+
+const SECRET_JWT_KEY = "mySecretKey";
 
 
 AppDataSource.initialize()
@@ -16,29 +26,41 @@ AppDataSource.initialize()
 const app = express();
 app.use(express.json());
 
+
+
+const users = [
+  {
+    id: 1,
+    username: "admin",
+    password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, 8),
+  },
+];
+
+
 // register routes
+app.post("/login", async (req: Request, res: Response) => {
+  const { username, password } = req.body;
+
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = bcrypt.hashSync(process.env.ADMIN_PASSWORD || '', 8);
+
+  if (username !== adminUsername || !bcrypt.compareSync(password, adminPassword)) {
+    return res.status(401).send("Invalid username or password.");
+  }
+
+  const token = jwt.sign({ id: adminUsername }, process.env.SECRET_JWT_KEY, {
+    expiresIn: 86400,
+  });
+
+  res.status(200).send({ auth: true, token });
+});
+
+
+
+
 app.get("/posts", async function (req: Request, res: Response) {
   const posts = await AppDataSource.getRepository(Post).find()
   res.json(posts)
-})
-
-app.get("/posts/:id", async function (req: Request, res: Response) {
-  const results = await AppDataSource.getRepository(Post).findOneBy({
-    id: parseInt(req.params.id),
-  })
-  return res.send(results)
-})
-app.post("/posts", async function (req: Request, res: Response) {
-  const post = await AppDataSource.getRepository(Post).create(req.body)
-  const results = await AppDataSource.getRepository(Post).save(post)
-  return res.send(results)
-})
-
-
-
-app.delete("/posts/:id", async function (req: Request, res: Response) {
-  const results = await AppDataSource.getRepository(Post).delete(req.params.id)
-  return res.send(results)
 })
 
 
