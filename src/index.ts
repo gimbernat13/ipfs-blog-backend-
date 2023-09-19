@@ -40,7 +40,6 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
     if (err) {
       return res.sendStatus(403);
     }
-
     req.user = user;
     next();  // pass the execution off to whatever request the client intended
   });
@@ -50,11 +49,9 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
 app.post("/login", async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-
     if (username !== ADMIN_USERNAME || !bcrypt.compareSync(password, ADMIN_PASSWORD)) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
-
     const token = jwt.sign({ id: ADMIN_USERNAME }, SECRET_JWT_KEY, { expiresIn: 86400 });
     res.status(200).json({ auth: true, token });
   } catch (error) {
@@ -77,10 +74,7 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
   const newPost = new Post()
   newPost.title = req.body.title
   newPost.text = req.body.text
-
   console.log("🔖 NewPost is... ", newPost);
-
-  
 
   try {
     const post = await AppDataSource.getRepository(Post).create(req.body);
@@ -91,6 +85,41 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
     return res.status(500).send("Internal Server Error");
   }
 });
+
+app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const token = "your-web3.storage-token-here"; // Get this securely
+    const storage = new Web3Storage({ token });
+    
+    // Assuming you receive the file path in the request body
+    const filePath = req.body.filePath;
+    const files = await getFilesFromPath(filePath);
+
+    console.log(`Uploading ${files.length} files`);
+    const cid = await storage.put(files);
+    console.log('Content added with CID:', cid);
+
+    // Save the CID and user ID to the database
+    const newFile = new File();
+    newFile.cid = cid;
+
+    const userRepo = await AppDataSource.getRepository(User);
+    const user = await userRepo.findOne(req.user.id); // Assuming 'id' exists on req.user
+
+    if (user) {
+      newFile.user = user;
+    }
+
+    const fileRepo = await AppDataSource.getRepository(File);
+    await fileRepo.save(newFile);
+
+    res.status(200).json({ cid });
+  } catch (error) {
+    console.error("Error in /upload:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 app.listen(8000, () => {
   console.log("Server running on port 8000");
