@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
 import * as express from "express";
+const { Web3Storage, getFilesFromPath } = require('web3.storage');
 
 
 dotenv.config();
