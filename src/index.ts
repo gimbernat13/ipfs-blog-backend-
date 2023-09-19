@@ -1,4 +1,8 @@
 import { Post } from "./entity/Post";
+import { File } from "./entity/File";
+import { User } from "./entity/User";
+
+
 import { AppDataSource } from "./data-source";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
