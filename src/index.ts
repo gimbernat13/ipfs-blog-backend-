@@ -9,6 +9,9 @@ import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
 import * as express from "express";
+import * as fs from "fs";
+import * as path from "path";
+
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 
 
@@ -96,13 +99,22 @@ app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
     const token = "your-web3.storage-token-here"; // Get this securely
     const storage = new Web3Storage({ token });
     
-    // Assuming you receive the file path in the request body
-    const filePath = req.body.filePath;
-    const files = await getFilesFromPath(filePath);
+    // Receive raw HTML content from the frontend
+    const htmlContent = req.body.htmlContent;
 
-    console.log(`Uploading ${files.length} files`);
+    // Convert raw HTML content to an HTML file
+    const tempFilePath = path.join(__dirname, "temp.html");
+    fs.writeFileSync(tempFilePath, htmlContent);
+
+    // Prepare the file for uploading to IPFS
+    const files = await getFilesFromPath(tempFilePath);
+
+    console.log(`Uploading HTML file to IPFS`);
     const cid = await storage.put(files);
     console.log('Content added with CID:', cid);
+
+    // Clean up the temp file after uploading
+    fs.unlinkSync(tempFilePath);
 
     // Save the CID and user ID to the database
     const newFile = new File();
@@ -124,7 +136,6 @@ app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 app.listen(8000, () => {
   console.log("Server running on port 8000");
