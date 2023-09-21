@@ -5,7 +5,7 @@ import { User } from "./entity/User";
 
 import { AppDataSource } from "./data-source";
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
 import * as express from "express";
