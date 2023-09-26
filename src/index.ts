@@ -20,6 +20,7 @@ dotenv.config();
 const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY || "myFallbackSecretKey";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 8) : "";
+const WEB3_STORAGE_TOKEN = process.env.WEB3_STORAGE_TOKEN;
 
 if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
   console.error("Missing essential environment variables");
@@ -96,7 +97,7 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
 
 app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
   try {
-    const token = "your-web3.storage-token-here"; // Get this securely
+    const token = WEB3_STORAGE_TOKEN; // Get this securely
     const storage = new Web3Storage({ token });
     
     // Receive raw HTML content from the frontend
