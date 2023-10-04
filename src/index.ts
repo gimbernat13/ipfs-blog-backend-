@@ -55,6 +55,36 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
 };
 
 
+app.post("/signup", async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+
+    // Check if the username already exists
+    const userRepository = AppDataSource.getRepository(User);
+    const existingUser = await userRepository.findOne({ where: { username } });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Username already exists" });
+    }
+
+    // Hash the password before saving it
+    const passwordHash = bcrypt.hashSync(password, 8);
+
+    // Create a new user
+    const newUser = new User();
+    newUser.username = username;
+    newUser.password = passwordHash;
+
+    await userRepository.save(newUser);
+
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    console.error("Error in /signup:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
 app.post("/login", async (req: Request, res: Response) => {
   console.log("auth")
   try {
@@ -96,8 +126,8 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
   }
 });
 
-app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
-  console.log("uploading files ")
+app.post("/upload", async (req: Request, res: Response) => {
+  console.log("uploading files ", req)
   try {
     const token = WEB3_STORAGE_TOKEN; // Get this securely
     const storage = new Web3Storage({ token });
