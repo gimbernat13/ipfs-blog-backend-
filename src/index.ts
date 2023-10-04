@@ -56,6 +56,7 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
 
 
 app.post("/login", async (req: Request, res: Response) => {
+  console.log("auth")
   try {
     const { username, password } = req.body;
     if (username !== ADMIN_USERNAME || !bcrypt.compareSync(password, ADMIN_PASSWORD)) {
@@ -96,10 +97,10 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
 });
 
 app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
+  console.log("uploading files ")
   try {
     const token = WEB3_STORAGE_TOKEN; // Get this securely
     const storage = new Web3Storage({ token });
-    
     // Receive raw HTML content from the frontend
     const htmlContent = req.body.htmlContent;
 

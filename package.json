@@ -43,7 +43,7 @@
     "watch": "tsc -w",
     "start": "tsc && node src/index.js",
     "typeorm": "./node_modules/.bin/typeorm",
-    "dev": "nodemon",
+    "dev": "nodemon --exec ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc"
   }
 }
