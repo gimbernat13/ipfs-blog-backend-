@@ -54,31 +54,28 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
   });
 };
 
-
 app.post("/signup", async (req: Request, res: Response) => {
   console.log("user repository")
   try {
     const { username, password } = req.body;
-    // Check if the username already exists
-    const posts = await AppDataSource.getRepository(Post).find();
-    const users = await AppDataSource.getRepository(User).find();
-    console.log("user repository", users)
-    // const existingUser1 = await userRepository.findOneBy({ id: username });
-    // if (existingUser1) {
-    //   return res.status(400).json({ error: "Username already exists" });
-    // }
-    // const existingUser = await userRepository.findOneBy({
-    //   id: 1,
-    // })
-    // // Hash the password before saving it
-    // const passwordHash = bcrypt.hashSync(password, 8);
-    // // Create a new user
-    // const newUser = new User();
-    // newUser.username = username;
-    // newUser.password = passwordHash;
-    // await userRepository.save(newUser);
+    const userRepository = await AppDataSource.getRepository(User);
+    const existingUser = await userRepository.findOneBy({ username: username });
+    const timber = await userRepository.findOneBy({
+      id: 1,
+      username: "Saw",
+    })
+    console.log("timber ", timber)
+    if (existingUser) {
+      console.log("existing user is  ", existingUser)
+      return res.status(400).json({ error: "Username already exists" });
+    }
+    const passwordHash = bcrypt.hashSync(password, 8);
+    const newUser = new User();
+    newUser.username = username;
+    newUser.password = passwordHash;
+    await userRepository.save(newUser);
 
-    // res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error in /signup:", error);
     res.status(500).json({ error: "Internal Server Error" });
