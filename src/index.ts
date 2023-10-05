@@ -1,6 +1,6 @@
-import { Post } from "./entity/Post";
-import { File } from "./entity/File";
-import { User } from "./entity/User";
+import { Post } from "./entity/Post.entity";
+import { File } from "./entity/File.entity";
+import { User } from "./entity/User.entity";
 
 
 import { AppDataSource } from "./data-source";
@@ -56,28 +56,29 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
 
 
 app.post("/signup", async (req: Request, res: Response) => {
+  console.log("user repository")
   try {
     const { username, password } = req.body;
-
     // Check if the username already exists
-    const userRepository = AppDataSource.getRepository(User);
-    const existingUser = await userRepository.findOne({ where: { username } });
+    const posts = await AppDataSource.getRepository(Post).find();
+    const users = await AppDataSource.getRepository(User).find();
+    console.log("user repository", users)
+    // const existingUser1 = await userRepository.findOneBy({ id: username });
+    // if (existingUser1) {
+    //   return res.status(400).json({ error: "Username already exists" });
+    // }
+    // const existingUser = await userRepository.findOneBy({
+    //   id: 1,
+    // })
+    // // Hash the password before saving it
+    // const passwordHash = bcrypt.hashSync(password, 8);
+    // // Create a new user
+    // const newUser = new User();
+    // newUser.username = username;
+    // newUser.password = passwordHash;
+    // await userRepository.save(newUser);
 
-    if (existingUser) {
-      return res.status(400).json({ error: "Username already exists" });
-    }
-
-    // Hash the password before saving it
-    const passwordHash = bcrypt.hashSync(password, 8);
-
-    // Create a new user
-    const newUser = new User();
-    newUser.username = username;
-    newUser.password = passwordHash;
-
-    await userRepository.save(newUser);
-
-    res.status(201).json({ message: "User registered successfully" });
+    // res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error in /signup:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -109,6 +110,7 @@ app.get("/posts", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 app.post("/posts", authenticateJWT, async function (req: Request, res: Response) {
   const newPost = new Post()

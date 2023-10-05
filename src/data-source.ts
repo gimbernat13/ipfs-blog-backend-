@@ -1,8 +1,8 @@
 import "reflect-metadata"
 import { DataSource } from "typeorm"
-import { Post } from "./entity/Post"
-import { Category } from "./entity/Category"
-
+import { Post } from "./entity/Post.entity"
+import { Category } from "./entity/Category.entity"
+// FIXME: Abstract to env variables  
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: "localhost",
@@ -12,7 +12,7 @@ export const AppDataSource = new DataSource({
   database: "gigz",
   synchronize: true,
   logging: true,
-  entities: [Post, Category],
+  entities: [__dirname + '/../**/*.entity.js'] ,
   subscribers: [],
   migrations: [],
 })
