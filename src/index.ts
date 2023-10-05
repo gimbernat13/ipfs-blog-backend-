@@ -43,10 +43,16 @@ app.use(express.json());
 const authenticateJWT = (req: Request, res: Response, next: express.NextFunction) => {
   const token = req.header('Authorization')?.split(' ')[1];
 
+  const decodedPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+  console.log(decodedPayload.exp); // This will show the expiration time in UNIX timestamp
+  console.log(Date.now() / 1000); // This will show the current time in UNIX timestamp
+
+
   if (token == null) return res.sendStatus(401);  // if there isn't any token
 
   jwt.verify(token, SECRET_JWT_KEY as string, (err: any, user: any) => {
     if (err) {
+      console.log("jwt error", err)
       return res.sendStatus(403);
     }
     req.user = user;
@@ -60,11 +66,6 @@ app.post("/signup", async (req: Request, res: Response) => {
     const { username, password } = req.body;
     const userRepository = await AppDataSource.getRepository(User);
     const existingUser = await userRepository.findOneBy({ username: username });
-    const timber = await userRepository.findOneBy({
-      id: 1,
-      username: "Saw",
-    })
-    console.log("timber ", timber)
     if (existingUser) {
       console.log("existing user is  ", existingUser)
       return res.status(400).json({ error: "Username already exists" });
@@ -89,7 +90,7 @@ app.post("/login", async (req: Request, res: Response) => {
     const userRepository = await AppDataSource.getRepository(User);
     const existingUser = await userRepository.findOneBy({ username: username });
 
-    if (!existingUser ) {
+    if (!existingUser) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
     const isPasswordValid = bcrypt.compareSync(password, existingUser.password);
@@ -97,6 +98,7 @@ app.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
     // Generate the JWT token using the user's ID
+
     const token = jwt.sign({ id: existingUser.id }, SECRET_JWT_KEY, { expiresIn: 86400 });
     res.status(200).json({ auth: true, token });
   } catch (error) {
@@ -132,7 +134,7 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
   }
 });
 
-app.post("/upload", async (req: Request, res: Response) => {
+app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
   console.log("uploading files ", req)
   try {
     const token = WEB3_STORAGE_TOKEN; // Get this securely
