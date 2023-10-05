@@ -84,13 +84,20 @@ app.post("/signup", async (req: Request, res: Response) => {
 
 
 app.post("/login", async (req: Request, res: Response) => {
-  console.log("auth")
   try {
     const { username, password } = req.body;
-    if (username !== ADMIN_USERNAME || !bcrypt.compareSync(password, ADMIN_PASSWORD)) {
+    const userRepository = await AppDataSource.getRepository(User);
+    const existingUser = await userRepository.findOneBy({ username: username });
+
+    if (!existingUser ) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
-    const token = jwt.sign({ id: ADMIN_USERNAME }, SECRET_JWT_KEY, { expiresIn: 86400 });
+    const isPasswordValid = bcrypt.compareSync(password, existingUser.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    // Generate the JWT token using the user's ID
+    const token = jwt.sign({ id: existingUser.id }, SECRET_JWT_KEY, { expiresIn: 86400 });
     res.status(200).json({ auth: true, token });
   } catch (error) {
     console.error("Error in /login:", error);
