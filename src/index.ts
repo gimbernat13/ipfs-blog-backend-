@@ -17,15 +17,9 @@ const { Web3Storage, getFilesFromPath } = require('web3.storage');
 
 dotenv.config();
 
-const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY || "myFallbackSecretKey";
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 8) : "";
+const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY;
 const WEB3_STORAGE_TOKEN = process.env.WEB3_STORAGE_TOKEN;
 
-if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-  console.error("Missing essential environment variables");
-  process.exit(1);
-}
 
 AppDataSource.initialize()
   .then(() => {
@@ -42,17 +36,20 @@ app.use(express.json());
 
 const authenticateJWT = (req: Request, res: Response, next: express.NextFunction) => {
   const token = req.header('Authorization')?.split(' ')[1];
+  console.log("✅ Received Token:", token);
 
   const decodedPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-  console.log(decodedPayload.exp); // This will show the expiration time in UNIX timestamp
-  console.log(Date.now() / 1000); // This will show the current time in UNIX timestamp
-
+  console.log("🤖 Expiration JWT", decodedPayload.exp); // This will show the expiration time in UNIX timestamp
+  console.log(" 🤖 Current date ", Date.now() / 1000); // This will show the current time in UNIX timestamp
+  console.log(" 🤖 Expiration is greater ", decodedPayload.exp > Date.now() / 1000); // This will show the current time in UNIX timestamp
 
   if (token == null) return res.sendStatus(401);  // if there isn't any token
 
   jwt.verify(token, SECRET_JWT_KEY as string, (err: any, user: any) => {
     if (err) {
-      console.log("jwt error", err)
+      console.log("❌ jwt error", err)
+      console.log("❌JWT Error Name:", err.name);
+      console.log("❌JWT Error Message:", err.message);
       return res.sendStatus(403);
     }
     req.user = user;
@@ -100,6 +97,8 @@ app.post("/login", async (req: Request, res: Response) => {
     // Generate the JWT token using the user's ID
 
     const token = jwt.sign({ id: existingUser.id }, SECRET_JWT_KEY, { expiresIn: 86400 });
+    console.log("✅ Generated Token:", token);
+
     res.status(200).json({ auth: true, token });
   } catch (error) {
     console.error("Error in /login:", error);
@@ -134,35 +133,79 @@ app.post("/posts", authenticateJWT, async function (req: Request, res: Response)
   }
 });
 
-app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
-  console.log("uploading files ", req)
+app.post("/upload1", authenticateJWT, async function (req: Request, res: Response) {
+  const newPost = new Post()
+  newPost.title = req.body.title
+  newPost.text = req.body.text
+  console.log("🔖 NewPost is... ", newPost);
+
   try {
+    const post = await AppDataSource.getRepository(Post).create(req.body);
+    const results = await AppDataSource.getRepository(Post).save(post);
+
     const token = WEB3_STORAGE_TOKEN; // Get this securely
     const storage = new Web3Storage({ token });
-    // Receive raw HTML content from the frontend
     const htmlContent = req.body.htmlContent;
-
-    // Convert raw HTML content to an HTML file
     const tempFilePath = path.join(__dirname, "temp.html");
     fs.writeFileSync(tempFilePath, htmlContent);
-
-    // Prepare the file for uploading to IPFS
     const files = await getFilesFromPath(tempFilePath);
-
-    console.log(`Uploading HTML file to IPFS`);
+    console.log(`🟡 Uploading HTML file to IPFS`);
     const cid = await storage.put(files);
-    console.log('Content added with CID:', cid);
-
-    // Clean up the temp file after uploading
+    console.log('🟢 Content added with CID:', cid);
     fs.unlinkSync(tempFilePath);
 
     // Save the CID and user ID to the database
     const newFile = new File();
     newFile.cid = cid;
-
+    console.log("🟢 CID Stored in DB :", cid)
     const userRepo = await AppDataSource.getRepository(User);
-    const user = await userRepo.findOne(req.user.id); // Assuming 'id' exists on req.user
 
+
+    
+    const user = await userRepo.findOne(req.user.id); // Assuming 'id' exists on req.user
+    if (user) {
+      newFile.user = user;
+    }
+
+    const fileRepo = await AppDataSource.getRepository(File);
+    await fileRepo.save(newFile);
+
+    res.status(200).json({ cid });
+
+
+    return res.send(results);
+  } catch (error) {
+    console.log("Error in /posts POST:", error);
+    return res.status(500).send("Internal Server Error");
+  }
+});
+
+
+
+
+app.post("/upload", authenticateJWT, async (req: Request, res: Response) => {
+  console.log("uploading files ", req)
+  try {
+    const token = WEB3_STORAGE_TOKEN; // Get this securely
+    const storage = new Web3Storage({ token });
+    const htmlContent = req.body.htmlContent;
+    const tempFilePath = path.join(__dirname, "temp.html");
+    fs.writeFileSync(tempFilePath, htmlContent);
+    const files = await getFilesFromPath(tempFilePath);
+    console.log(`🟡 Uploading HTML file to IPFS`);
+    const cid = await storage.put(files);
+    console.log('🟢 Content added with CID:', cid);
+    fs.unlinkSync(tempFilePath);
+
+    // Save the CID and user ID to the database
+    const newFile = new File();
+    newFile.cid = cid;
+    console.log("🟢 CID Stored in DB :", cid)
+    const userRepo = await AppDataSource.getRepository(User);
+
+
+    
+    const user = await userRepo.findOne(req.user.id); // Assuming 'id' exists on req.user
     if (user) {
       newFile.user = user;
     }
