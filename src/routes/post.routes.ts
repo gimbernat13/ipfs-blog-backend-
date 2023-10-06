@@ -1,4 +1,4 @@
-import express from "express";
+import * as express from "express";
 import { authenticateJWT } from "../middleware/authentication"; 
 import * as PostController from "../controllers/post.controller";
 

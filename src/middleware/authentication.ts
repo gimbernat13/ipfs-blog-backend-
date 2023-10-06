@@ -18,5 +18,6 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     }
     console.log("✅ JWT successfully verified for user:", user);
     req.user = user;
-    next();  
+    next(); 
+  });
 };

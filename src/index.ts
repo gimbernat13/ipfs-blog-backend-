@@ -1,18 +1,12 @@
 
 import { AppDataSource } from "./data-source";
-import { Request, Response } from "express";
-import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import * as express from "express";
 import userRoutes from './routes/user.routes';
 import fileRoutes from './routes/file.routes';
 import postRoutes from './routes/post.routes';
 
-
 dotenv.config();
-
-
-
 
 AppDataSource.initialize()
   .then(() => {
@@ -27,19 +21,10 @@ const app = express();
 app.use(express.json());
 
 
-
-
 // ============Routes=============
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/files', fileRoutes);
-
-
-
-
-
-
-
 app.listen(8000, () => {
   console.log("Server running on port 8000");
 });
