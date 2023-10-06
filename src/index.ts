@@ -11,6 +11,7 @@ import * as dotenv from "dotenv";
 import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
+import userRoutes from './routes/user.routes';
 
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 
@@ -57,114 +58,13 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
   });
 };
 
-app.post("/signup", async (req: Request, res: Response) => {
-  console.log("user repository")
-  try {
-    const { username, password } = req.body;
-    const userRepository = await AppDataSource.getRepository(User);
-    const existingUser = await userRepository.findOneBy({ username: username });
-    if (existingUser) {
-      console.log("existing user is  ", existingUser)
-      return res.status(400).json({ error: "Username already exists" });
-    }
-    const passwordHash = bcrypt.hashSync(password, 8);
-    const newUser = new User();
-    newUser.username = username;
-    newUser.password = passwordHash;
-    await userRepository.save(newUser);
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (error) {
-    console.error("Error in /signup:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.post("/login", async (req: Request, res: Response) => {
-  try {
-    const { username, password } = req.body;
-    const userRepository = await AppDataSource.getRepository(User);
-    const existingUser = await userRepository.findOneBy({ username: username });
-    if (!existingUser) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
-    const isPasswordValid = bcrypt.compareSync(password, existingUser.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
-    // Generate the JWT token using the user's ID
-    const token = jwt.sign({ id: existingUser.id }, SECRET_JWT_KEY, { expiresIn: 86400 });
-    console.log("✅ Generated Token:", token);
-    res.status(200).json({ auth: true, token });
-  } catch (error) {
-    console.error("Error in /login:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.get("/posts", async (req: Request, res: Response) => {
-  try {
-    const posts = await AppDataSource.getRepository(Post).find();
-    res.status(200).json(posts);
-  } catch (error) {
-    console.error("Error in /posts:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
 
 
-app.post("/posts", authenticateJWT, async function (req: Request, res: Response) {
-  const newPost = new Post()
-  newPost.title = req.body.title
-  newPost.text = req.body.text
-  console.log("🔖 NewPost is... ", newPost);
+// ============Routes=============
+app.use('/users', userRoutes);
+app.use('/posts', postRoutes);
+app.use('/files', fileRoutes);
 
-  try {
-    const post = await AppDataSource.getRepository(Post).create(req.body);
-    const results = await AppDataSource.getRepository(Post).save(post);
-    return res.send(results);
-  } catch (error) {
-    console.log("Error in /posts POST:", error);
-    return res.status(500).send("Internal Server Error");
-  }
-});
-
-app.post("/upload", authenticateJWT, async function (req: Request, res: Response) {
-  const newPost = new Post()
-  newPost.title = req.body.title
-  newPost.text = req.body.text
-  console.log("🔖 NewPost is... ", newPost);
-
-  try {
-    const post = await AppDataSource.getRepository(Post).create(req.body);
-    const results = await AppDataSource.getRepository(Post).save(post);
-    const token = WEB3_STORAGE_TOKEN;
-    const storage = new Web3Storage({ token });
-    const htmlContent = req.body.htmlContent;
-    const tempFilePath = path.join(__dirname, "temp.html");
-    fs.writeFileSync(tempFilePath, htmlContent);
-    const files = await getFilesFromPath(tempFilePath);
-    console.log(`🟡 Uploading HTML file to IPFS`);
-    const cid = await storage.put(files);
-    console.log('🟢 Content added with CID:', cid);
-    fs.unlinkSync(tempFilePath);
-    const newFile = new File();
-    newFile.cid = cid;
-    const userRepo = await AppDataSource.getRepository(User);
-    const user = await userRepo.findOne(req.user.id);
-    if (user) {
-      newFile.user = user;
-    }
-    const fileRepo = await AppDataSource.getRepository(File);
-    await fileRepo.save(newFile);
-    console.log("🟢 CID Stored in DB :", cid)
-    return res.send(results);
-  } catch (error) {
-    console.log("Error in /posts POST:", error);
-    return res.status(500).send("Internal Server Error");
-
-  }
-});
 
 
 
