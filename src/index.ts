@@ -12,6 +12,7 @@ import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
 import userRoutes from './routes/user.routes';
+import userRoutes from './routes/user.routes';
 
 const { Web3Storage, getFilesFromPath } = require('web3.storage');
 
@@ -62,8 +63,7 @@ const authenticateJWT = (req: Request, res: Response, next: express.NextFunction
 
 // ============Routes=============
 app.use('/users', userRoutes);
-app.use('/posts', postRoutes);
-app.use('/files', fileRoutes);
+
 
 
 
