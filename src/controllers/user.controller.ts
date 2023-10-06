@@ -3,6 +3,9 @@ import { AppDataSource } from "../data-source";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { User } from "../entity/User.entity";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY;
 
@@ -31,14 +34,13 @@ export const login = async (req: Request, res: Response) => {
         const { username, password } = req.body;
         const userRepository = await AppDataSource.getRepository(User);
         const existingUser = await userRepository.findOneBy({ username: username });
-        
         if (!existingUser || !bcrypt.compareSync(password, existingUser.password)) {
             return res.status(401).json({ error: "Invalid username or password" });
         }
-
         const token = jwt.sign({ id: existingUser.id }, SECRET_JWT_KEY, { expiresIn: 86400 });
         res.status(200).json({ auth: true, token });
     } catch (error) {
+        console.log("❌ Error ", error)
         res.status(500).json({ error: "Internal Server Error" });
     }
 };

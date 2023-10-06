@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+const jwt = require('jsonwebtoken');
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY || "myFallbackSecretKey";
 
@@ -8,7 +11,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
   if (token == null) {
     console.log("🛑 No JWT token provided");
-    return res.sendStatus(401); 
+    return res.sendStatus(401);
   }
 
   jwt.verify(token, SECRET_JWT_KEY as string, (err: any, user: any) => {
@@ -18,6 +21,6 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     }
     console.log("✅ JWT successfully verified for user:", user);
     req.user = user;
-    next(); 
+    next();
   });
 };

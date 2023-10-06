@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import * as fs from "fs";
 import * as path from "path";
-import { Web3Storage } from "web3.storage";
+const { Web3Storage, getFilesFromPath } = require('web3.storage');
 import { File } from "../entity/File.entity";
 import { User } from "../entity/User.entity";
 import { AppDataSource } from "../data-source";
@@ -13,21 +13,43 @@ export const uploadFile = async (req: Request, res: Response) => {
         const storage = new Web3Storage({ token });
         const htmlContent = req.body.htmlContent;
         const tempFilePath = path.join(__dirname, "temp.html");
+        
         fs.writeFileSync(tempFilePath, htmlContent);
+
+        // Check if the file has been created
+        if (fs.existsSync(tempFilePath)) {
+            console.log("📁 temp.html was successfully created.");
+        } else {
+            console.log("❌ temp.html was NOT created.");
+            throw new Error("File creation failed.");
+        }
+
         const files = await getFilesFromPath(tempFilePath);
         console.log("🔄 Preparing files for upload...");
+        
         const cid = await storage.put(files);
         console.log("✅ File uploaded successfully with CID:", cid);
-        fs.unlinkSync(tempFilePath);
+        
+        // Handle deletion gracefully
+        if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+            console.log("🗑️ temp.html was successfully deleted.");
+        } else {
+            console.log("❌ temp.html was not found. Cannot delete.");
+        }
+
         const newFile = new File();
         newFile.cid = cid;
         const userRepo = await AppDataSource.getRepository(User);
         const user = await userRepo.findOne(req.user.id);
+        
         if (user) {
             newFile.user = user;
         }
+
         const fileRepo = await AppDataSource.getRepository(File);
         await fileRepo.save(newFile);
+        
         console.log("📁 File metadata saved to database.");
         res.status(200).json({ cid });
     } catch (error) {

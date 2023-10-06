@@ -22,9 +22,9 @@ app.use(express.json());
 
 
 // ============Routes=============
-app.use('/users', userRoutes);
-app.use('/posts', postRoutes);
-app.use('/files', fileRoutes);
+app.use(userRoutes);
+app.use(postRoutes);
+app.use(fileRoutes);
 app.listen(8000, () => {
   console.log("Server running on port 8000");
 });
