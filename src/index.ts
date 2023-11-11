@@ -8,20 +8,34 @@ import postRoutes from './routes/post.routes';
 import nonceRoutes from './routes/nonce.routes';
 import { ethers } from "ethers";
 
+
+interface VerifyMessageParams {
+  message: string;
+  address: string;
+  signature: string;
+}
+
 // Generate a random wallet for testing (Do not use in production!)
 const wallet = ethers.Wallet.createRandom();
 
 // Mock values
 const mockMessage = 'Hello, this is a test message!';
 const mockAddress = wallet.address; // Use the generated address
-const mockPrivateKey = wallet.privateKey; //
+const mockPrivateKey = wallet.privateKey;
 
+var mockSignature: any = null
 
+wallet.signMessage(mockMessage)
+  .then(signature => {
+    console.log("Signature:", signature);
+    mockSignature = signature
+    verifyMessage({ message: mockMessage, address: mockAddress, signature: mockSignature })
+  })
+  .catch(error => {
+    console.error("Error signing message:", error);
+  });
 
 const verifyMessage = async ({ message, address, signature }: VerifyMessageParams) => {
-
-  console.log("putas ", ethers.utils);
-
   try {
     let signerAddr = ethers.utils.verifyMessage(message, signature);
     console.log("-------Verify Message Function-------")
@@ -32,12 +46,13 @@ const verifyMessage = async ({ message, address, signature }: VerifyMessageParam
     }
     console.log("✅ Eths Signature verified:", address)
     return true;
+
   } catch (err) {
     console.log("🚨", err);
     return false;
   }
 }
-verifyMessage({ message: mockMessage, address: mockAddress, signature: mockPrivateKey })
+
 
 
 dotenv.config();
@@ -54,11 +69,6 @@ AppDataSource.initialize()
 const app = express();
 app.use(express.json());
 
-interface VerifyMessageParams {
-  message: string;
-  address: string;
-  signature: string;
-}
 
 
 // ============Routes=============
