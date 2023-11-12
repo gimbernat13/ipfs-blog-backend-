@@ -12,6 +12,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ unique: true, nullable: true })
+  ethAddress: string;
+
   // One-to-many relationship with File
   @OneToMany(() => File, file => file.user)
   files: File[];

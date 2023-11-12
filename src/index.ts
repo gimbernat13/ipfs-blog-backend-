@@ -7,18 +7,15 @@ import fileRoutes from './routes/file.routes';
 import postRoutes from './routes/post.routes';
 import nonceRoutes from './routes/nonce.routes';
 import { ethers } from "ethers";
+import { verifyMessage } from "./utils/verifyWeb3Message";
 
 
-interface VerifyMessageParams {
-  message: string;
-  address: string;
-  signature: string;
-}
+
 
 // Generate a random wallet for testing (Do not use in production!)
 const wallet = ethers.Wallet.createRandom();
 
-// Mock values
+// FIXME: Change Mock values
 const mockMessage = 'Hello, this is a test message!';
 const mockAddress = wallet.address; // Use the generated address
 const mockPrivateKey = wallet.privateKey;
@@ -34,26 +31,6 @@ wallet.signMessage(mockMessage)
   .catch(error => {
     console.error("Error signing message:", error);
   });
-
-const verifyMessage = async ({ message, address, signature }: VerifyMessageParams) => {
-  try {
-    let signerAddr = ethers.utils.verifyMessage(message, signature);
-    console.log("-------Verify Message Function-------")
-    console.log("🚧 Signers Address:", signerAddr)
-    console.log("🚧 Request Address:", address)
-    if (signerAddr !== address) {
-      return false;
-    }
-    console.log("✅ Eths Signature verified:", address)
-    return true;
-
-  } catch (err) {
-    console.log("🚨", err);
-    return false;
-  }
-}
-
-
 
 dotenv.config();
 

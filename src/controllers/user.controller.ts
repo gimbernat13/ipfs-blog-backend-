@@ -4,6 +4,7 @@ import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { User } from "../entity/User.entity";
 import * as dotenv from "dotenv";
+import { verifyMessage } from "../utils/verifyWeb3Message";
 
 dotenv.config();
 
@@ -22,12 +23,32 @@ export const signup = async (req: Request, res: Response) => {
         newUser.username = username;
         newUser.password = passwordHash;
         await userRepository.save(newUser);
-
         res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+
+export const web3Signup = async (req: Request, res: Response) => {
+    try {
+        const { message, ethAddress, signature } = req.body;
+        const userRepository = await AppDataSource.getRepository(User);
+        const existingUser = await userRepository.findOneBy({ ethAddress: ethAddress });
+        if (existingUser) {
+            return res.status(400).json({ error: "Ethereum address already in use" });
+        }
+        verifyMessage({ message: message, address: ethAddress, signature: signature })
+        const newUser = new User();
+        newUser.ethAddress = ethAddress;
+        await userRepository.save(newUser);
+        res.status(201).json({ message: "User registered successfully with Ethereum address" });
+    } catch (error) {
+        console.error("❌ Error ", error)
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
 
 export const login = async (req: Request, res: Response) => {
     try {
