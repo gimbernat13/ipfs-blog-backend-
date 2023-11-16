@@ -7,18 +7,18 @@ import postRoutes from "./routes/post.routes"
 import nonceRoutes from "./routes/nonce.routes"
 import { ethers } from "ethers"
 import { verifyMessage } from "./utils/verifyWeb3Message"
+
 const cors = require("cors")
 
-// Generate a random wallet for testing (Do not use in production!)
+dotenv.config()
+
 const wallet = ethers.Wallet.createRandom()
 
-// FIXME: Change Mock values
 const mockMessage = "Hello, this is a test message!"
 const mockAddress = wallet.address // Use the generated address
 const mockPrivateKey = wallet.privateKey
 
 var mockSignature: any = null
-
 wallet
   .signMessage(mockMessage)
   .then((signature) => {
@@ -33,8 +33,6 @@ wallet
   .catch((error) => {
     console.error("Error signing message:", error)
   })
-
-dotenv.config()
 
 AppDataSource.initialize()
   .then(() => {
