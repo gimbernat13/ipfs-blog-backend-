@@ -5,7 +5,7 @@ import * as jwt from "jsonwebtoken"
 import { User } from "../entity/User.entity"
 import * as dotenv from "dotenv"
 import { verifyMessage } from "../utils/verifyWeb3Message"
-
+import { ethers } from "ethers"
 dotenv.config()
 
 const SECRET_JWT_KEY = process.env.SECRET_JWT_KEY
@@ -31,9 +31,19 @@ export const signup = async (req: Request, res: Response) => {
 
 export const web3SignupLogin = async (req: Request, res: Response) => {
   try {
-    const { message, address: ethAddress, signature } = req.body
+    const { message, signature } = req.body
     console.log("❤️ Request body", req.body)
-    console.log("eth adres", ethAddress)
+
+    const ethAddress = ethers.utils.verifyMessage(message, signature)
+    console.log("Recovered address:", ethAddress)
+
+    if (!ethAddress) {
+      console.log("❌ ethAddress recovery failed")
+      return res.status(400).json({
+        error: "Invalid request: failed to recover ethAddress",
+      })
+    }
+
     const userRepository = await AppDataSource.getRepository(User)
     let user = await userRepository.findOneBy({ ethAddress })
 
@@ -50,20 +60,7 @@ export const web3SignupLogin = async (req: Request, res: Response) => {
     }
 
     console.log("🚧 Request is :  ", message, ethAddress, signature)
-
-    const isVerified = await verifyMessage({
-      message,
-      address: ethAddress,
-      signature,
-    })
-
-    if (!isVerified) {
-      console.log("❌ Verification failed")
-      return res.status(401).json({
-        error: "Verification failed: Unable to Verify Signature",
-      })
-    }
-
+    // The verifyMessage method implicitly verifies the signature
     const jwtToken = jwt.sign({ id: user.id }, SECRET_JWT_KEY, {
       expiresIn: 86400,
     })
