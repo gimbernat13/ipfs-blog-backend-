@@ -33,8 +33,9 @@ export const web3SignupLogin = async (req: Request, res: Response) => {
   try {
     const { message, signature } = req.body
     console.log("❤️ Request body", req.body)
+    console.log(" 👌 message  ", message)
 
-    const ethAddress = ethers.utils.verifyMessage(message, signature)
+    const ethAddress = ethers.utils.verifyMessage(message.statement, signature)
     console.log("Recovered address:", ethAddress)
 
     if (!ethAddress) {
