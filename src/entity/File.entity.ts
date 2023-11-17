@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
-import { User } from "./User.entity";  // Import the User entity
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm"
+import { User } from "./User.entity" // Import the User entity
 
 @Entity()
 export class File {
@@ -9,19 +9,19 @@ export class File {
   @Column()
   cid: string
 
-  @Column()
+  @Column({ nullable: true })
   title: string
 
-  @Column()
+  @Column({ nullable: true })
   subtitle: string
 
-  @Column()
+  @Column({ nullable: true })
   date_time: string
 
-  @Column()
+  @Column({ nullable: true })
   preview_url: string
 
-  @Column()
+  @Column({ nullable: true })
   img_url: string
 
   // Many-to-one relationship with User
