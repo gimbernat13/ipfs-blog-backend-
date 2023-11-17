@@ -69,7 +69,7 @@ export const web3SignupLogin = async (req: Request, res: Response) => {
     return res.status(200).json({ auth: true, jwtToken })
   } catch (error) {
     console.error("❌ Error ", error)
-    res.status(500).json({ error: "Internal Server Error" })
+    res.status(500).json({ error: "Error During Authentication" })
   }
 }
 
