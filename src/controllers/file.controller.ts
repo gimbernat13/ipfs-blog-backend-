@@ -10,14 +10,13 @@ export const uploadFile = async (req: Request, res: Response) => {
   console.log("📤 Uploading files...")
   try {
     // Extract additional fields from the request
-    const { title, subtitle, preview_url, img_url } = req.body
+    const { title, subtitle, preview_url, img_url, html_content } = req.body
 
     const token = process.env.WEB3_STORAGE_TOKEN
     const storage = new Web3Storage({ token })
-    const htmlContent = req.body.htmlContent
     const tempFilePath = path.join(__dirname, "temp.html")
 
-    fs.writeFileSync(tempFilePath, htmlContent)
+    fs.writeFileSync(tempFilePath, html_content)
 
     // Check if the file has been created
     if (fs.existsSync(tempFilePath)) {
@@ -43,8 +42,7 @@ export const uploadFile = async (req: Request, res: Response) => {
 
     const newFile = new File()
     newFile.cid = cid
-
-    // Assign the new fields to the File entity
+    newFile.html_content = html_content
     newFile.title = title
     newFile.subtitle = subtitle
     newFile.date_time = new Date().toISOString() // Set current timestamp

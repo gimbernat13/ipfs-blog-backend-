@@ -14,6 +14,8 @@ export class File {
 
   @Column({ nullable: true })
   subtitle: string
+  @Column({ nullable: true })
+  html_content: string
 
   @Column({ nullable: true })
   date_time: string
