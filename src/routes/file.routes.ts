@@ -1,10 +1,12 @@
-import * as express from "express";
-import { authenticateJWT } from "../middleware/authentication"; 
-import * as FileController from "../controllers/file.controller";
+import * as express from "express"
+import { authenticateJWT } from "../middleware/authentication"
+import * as FileController from "../controllers/file.controller"
 
-const router = express.Router();
+const router = express.Router()
 
 // Define the route for file upload
-router.post("/upload", authenticateJWT, FileController.uploadFile);
+router.get("/files", FileController.getFiles)
 
-export default router;
+router.post("/upload", authenticateJWT, FileController.uploadFile)
+
+export default router

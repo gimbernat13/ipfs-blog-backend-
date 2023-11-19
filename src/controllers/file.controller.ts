@@ -6,6 +6,38 @@ import { File } from "../entity/File.entity"
 import { User } from "../entity/User.entity"
 import { AppDataSource } from "../data-source"
 
+export const getFile = async (req: Request, res: Response) => {
+  const cid = req.params.cid // Get the 'cid' from the route parameters
+
+  try {
+    const fileRepository = AppDataSource.getRepository(File) // Get the file repository
+    const file = await fileRepository.findOneBy({ cid }) // Find the file by its 'cid'
+
+    if (!file) {
+      // If no file is found with the given 'cid'
+      res.status(404).json({ error: "File not found" })
+      return
+    }
+
+    console.log("📋 Fetching file with CID:", cid)
+    res.status(200).json(file)
+  } catch (error) {
+    console.error("❌ Error in /files :", error)
+    res.status(500).json({ error: "Internal Server Error" })
+  }
+}
+
+export const getFiles = async (req: Request, res: Response) => {
+  try {
+    const posts = await AppDataSource.getRepository(File).find()
+    console.log("📋 Fetching all Files ...")
+    res.status(200).json(posts)
+  } catch (error) {
+    console.error("❌ Error in /files :", error)
+    res.status(500).json({ error: "Internal Server Error" })
+  }
+}
+
 export const uploadFile = async (req: Request, res: Response) => {
   console.log("📤 Uploading files...")
   try {
