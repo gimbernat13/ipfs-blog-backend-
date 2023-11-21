@@ -30,6 +30,7 @@ export const signup = async (req: Request, res: Response) => {
 }
 
 export const web3SignupLogin = async (req: Request, res: Response) => {
+  // FIXME: CHANGE TO COOKIE AUTH
   try {
     const { message, signature } = req.body
     console.log("❤️ Request body", req.body)
