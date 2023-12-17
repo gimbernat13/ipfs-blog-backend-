@@ -43,7 +43,6 @@ export const uploadFile = async (req: Request, res: Response) => {
   try {
     // Extract additional fields from the request
     const { title, subtitle, preview_url, img_url, html_content } = req.body
-
     const token = process.env.WEB3_STORAGE_TOKEN
     const storage = new Web3Storage({ token })
     const tempFilePath = path.join(__dirname, "temp.html")

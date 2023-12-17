@@ -13,7 +13,15 @@ export const getPosts = async (req: Request, res: Response) => {
     }
 }
 
+// POST /posts  
+
 export const createPost = async (req: Request, res: Response) => {
+    if (!req.body.title || !req.body.text) {
+        return res.status(400).send("Missing required fields");
+    }   
+
+
+
     const newPost = new Post();
     newPost.title = req.body.title;
     newPost.text = req.body.text;
@@ -21,10 +29,12 @@ export const createPost = async (req: Request, res: Response) => {
     try {
         const post = await AppDataSource.getRepository(Post).create(req.body);
         const results = await AppDataSource.getRepository(Post).save(post);
-        console.log("✅ Post created successfully!");
+        console.log("✅ Post created successfully!", results);
         return res.send(results);
+
     } catch (error) {
         console.error("❌ Error in /posts POST:", error);
         return res.status(500).send("Internal Server Error");
+
     }
 }
