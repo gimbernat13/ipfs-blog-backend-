@@ -38,6 +38,7 @@
     "minimist": "^1.2.8",
     "pg": "^8.7.3",
     "reflect-metadata": "^0.1.13",
+    "siwe": "^2.1.4",
     "typeorm": "^0.3.0-rc.40",
     "web3.storage": "^4.5.5"
   },
